@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r libraries}
-library(tidyverse)     # for data cleaning and plotting
+library(tidyverse)     
 library(lubridate)     # for date manipulation
 library(openintro)     # for the abbr2state() function
 library(maps)          # for map data
