@@ -1,0 +1,11 @@
+---
+title: "Katie's EDA Code"
+author: "Erin Franke"
+date: "6/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
