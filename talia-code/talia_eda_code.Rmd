@@ -1,6 +1,6 @@
 ---
 title: "Talia's EDA Code"
-author: "Erin Franke"
+author: "Talia Chait"
 date: "6/28/2021"
 output: html_document
 ---
