@@ -9,7 +9,6 @@ output:
     toc: TRUE
     toc_float: TRUE
     df_print: paged
-    code_download: true
 ---
 
 ```{r setup, include=FALSE}
