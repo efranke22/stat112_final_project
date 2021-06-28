@@ -9,4 +9,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Erin
+```{r}
+library(readr)
+library(tidyverse)
+library(stringr)
+nationalpark <- read_csv("nationalpark.csv")
+```
+
+Clean the data 
+```{r}
+national_parks <- nationalpark %>%
+  mutate(lat = as.numeric(substr(`_geoloc`, 9, 16)), 
+         long = as.numeric(substr(`_geoloc`, 26,35))) %>%
+  select(name, area_name, lat, long, city_name, state_name, popularity, length, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities)
+```
+
