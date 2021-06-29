@@ -13,14 +13,17 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(tidyverse)
 library(stringr)
-nationalpark <- read_csv("nationalpark.csv")
+library(tidyr)
+nationalpark <- read_csv("../data/nationalpark.csv")
 ```
 
 Clean the data 
 ```{r}
 national_parks <- nationalpark %>%
   mutate(lat = as.numeric(substr(`_geoloc`, 9, 16)), 
-         long = as.numeric(substr(`_geoloc`, 26,35))) %>%
-  select(name, area_name, lat, long, city_name, state_name, popularity, length, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities)
+         long = as.numeric(substr(`_geoloc`, 26,33)), 
+         length_miles = length/5280, 
+         ) %>%
+  select(name, area_name, lat, long, city_name, state_name, popularity, length, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) 
 ```
 
