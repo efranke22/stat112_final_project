@@ -22,8 +22,11 @@ Clean the data
 national_parks <- nationalpark %>%
   mutate(lat = as.numeric(substr(`_geoloc`, 9, 16)), 
          long = as.numeric(substr(`_geoloc`, 26,33)), 
-         length_miles = length/5280, 
+         length_miles = round(length/5280, 3), 
          ) %>%
-  select(name, area_name, lat, long, city_name, state_name, popularity, length, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) 
+  select(name, area_name, lat, long, city_name, state_name, popularity, length_miles, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) %>%
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park")) %>%
+  group_by(area_name) %>%
+  count()
 ```
 
