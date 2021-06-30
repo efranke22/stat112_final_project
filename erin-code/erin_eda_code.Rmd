@@ -25,6 +25,47 @@ national_parks <- nationalpark %>%
          length_miles = round(length/5280, 3), 
          ) %>%
   select(name, area_name, lat, long, city_name, state_name, popularity, length_miles, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) %>%
-  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park"))
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park")) %>%
+  mutate(no_dogs = as.numeric(str_detect(features, "dogs-no")), 
+         river = as.numeric(str_detect(features, "river")), 
+         views = as.numeric(str_detect(features, "views")), 
+         wildflowers = as.numeric(str_detect(features, "wild-flowers")), 
+         wildlife = as.numeric(str_detect(features, "wildlife")), 
+         cave = as.numeric(str_detect(features, "cave")), 
+         forest = as.numeric(str_detect(features, "forest")), 
+         partially_paved = as.numeric(str_detect(features, "partially-paved")), 
+         ada = as.numeric(str_detect(features, "ada")), 
+         waterfall = as.numeric(str_detect(features, "waterfall")), 
+         kids = as.numeric(str_detect(features, "kids")), 
+         paved = as.numeric(str_detect(features, "paved")), 
+         beach = as.numeric(str_detect(features, "beach")), 
+         strollers = as.numeric(str_detect(features, "strollers")), 
+         dogs_leash = as.numeric(str_detect(features, "dogs-leash")), 
+         historic_site = as.numeric(str_detect(features, "historic-site")), 
+         lake = as.numeric(str_detect(features, "lake")), 
+         hiking = as.numeric(str_detect(activities, "hiking")), 
+         nature_trips = as.numeric(str_detect(activities, "nature-trips")), 
+         trail_running = as.numeric(str_detect(activities, "trail-running")), 
+         birding = as.numeric(str_detect(activities, "birding")), 
+         fishing = as.numeric(str_detect(activities, "fishing")), 
+         walking = as.numeric(str_detect(activities, "walking")), 
+         backpacking = as.numeric(str_detect(activities, "backpacking")), 
+         camping = as.numeric(str_detect(activities, "camping")), 
+         road_biking = as.numeric(str_detect(activities, "road-biking")), 
+         rock_climbing = as.numeric(str_detect(activities, "rock-climbing")), 
+         cross_country_skiing = as.numeric(str_detect(activities, "cross-country-skiing")), 
+         paddle_sports = as.numeric(str_detect(activities, "paddle-sports")), 
+         snowshoeing = as.numeric(str_detect(activities, "snowshoeing")), 
+         fly_fishing = as.numeric(str_detect(activities, "fly-fishing")), 
+         horseback_riding = as.numeric(str_detect(activities, "horseback-riding")), 
+         mountain_biking = as.numeric(str_detect(activities, "mountain-biking")), 
+         scenic_driving = as.numeric(str_detect(activities, "scenic-driving")), 
+         bike_touring = as.numeric(str_detect(activities, "bike-touring")), 
+         off_road_driving = as.numeric(str_detect(activities, "off-road-driving")))
+national_parks$total_features <- rowSums(national_parks[17:52])
+```
+
+```{r}
+
 ```
 
