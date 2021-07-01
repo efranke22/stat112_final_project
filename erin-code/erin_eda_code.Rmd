@@ -14,6 +14,10 @@ library(readr)
 library(tidyverse)
 library(stringr)
 library(tidyr)
+library(ggridges)
+library(nationalparkcolors)
+library(ggthemes) 
+library(ggtext)
 nationalpark <- read_csv("../data/nationalpark.csv")
 ```
 
@@ -65,7 +69,44 @@ national_parks <- nationalpark %>%
 national_parks$total_features <- rowSums(national_parks[17:52])
 ```
 
+What parks and trails are best for kids?
 ```{r}
+#483 out of the 1,530 trails at the top 10 most visited national parks are good for kids
+sum(national_parks$kids)
 
+#find proportion of trails at each park that are considered kid friendly
+kids_proportion <- national_parks %>%
+  group_by(area_name, kids) %>%
+  count() %>%
+  pivot_wider(id_cols = area_name, names_from = kids, values_from = n) %>%
+  rename(kids_no = `0`, kids_yes = `1`) %>%
+  mutate(prop_kid_friendly = round(kids_yes / (kids_yes + kids_no),3)) %>%
+  arrange(desc(prop_kid_friendly))
+```
+
+```{r}
+`%!in%` <- Negate(`%in%`)
+national_parks %>%
+  filter(name %!in% c("Olympic Peninsula Loop Drive", "West Yellowstone to Jackson Scenic Drive", "Joshua Tree National Park Scenic Drive")) %>%
+  left_join(kids_proportion, by = "area_name") %>%
+  mutate(area_name = as.factor(area_name)) %>%
+  ggplot(aes(y=fct_reorder(area_name, prop_kid_friendly)))+
+  geom_density_ridges(
+    aes(x=length_miles, fill = paste(area_name, kids)), 
+    alpha = .8, color = "white", from = 0, to =40)+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(breaks = c(0, 2, 4,6, 8, 10), limits = c(0, 10), expand = c(0, 0)) +
+  scale_fill_cyclical(
+    breaks = c(0, 1),
+    labels = c(`0` = "no_kids", `1` = "yes_kids"),
+    values = c("darkorange3", "dodgerblue1", "darkorange3", "dodgerblue4"),
+    name = "Option", guide = "legend"
+  ) +
+  labs(x= "", y="", title = "Trail length (miles) for <strong><span style='color:dodgerblue3'>kid</span></strong></b> versus <strong><span style='color:darkorange3'>not kid</span></strong></b> recommended trails", caption = "Data from Kaggle taken from AllTrails")+
+  theme_minimal()+
+  theme(plot.title.position = "plot", 
+        panel.grid.major.x = element_blank(), 
+        panel.grid.minor.x = element_blank(),
+        plot.title = element_markdown(family = "mono", face = "bold"))
 ```
 
