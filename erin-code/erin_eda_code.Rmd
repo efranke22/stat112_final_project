@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 ```{r}
@@ -18,7 +18,9 @@ library(ggridges)
 library(nationalparkcolors)
 library(ggthemes) 
 library(ggtext)
+library(patchwork)
 nationalpark <- read_csv("../data/nationalpark.csv")
+`%!in%` <- Negate(`%in%`)
 ```
 
 Clean the data 
@@ -76,21 +78,31 @@ sum(national_parks$kids)
 
 #find proportion of trails at each park that are considered kid friendly
 kids_proportion <- national_parks %>%
+  filter(name %!in% c("Olympic Peninsula Loop Drive", "West Yellowstone to Jackson Scenic Drive", "Joshua Tree National Park Scenic Drive")) %>%
   group_by(area_name, kids) %>%
   count() %>%
   pivot_wider(id_cols = area_name, names_from = kids, values_from = n) %>%
   rename(kids_no = `0`, kids_yes = `1`) %>%
   mutate(prop_kid_friendly = round(kids_yes / (kids_yes + kids_no),3)) %>%
   arrange(desc(prop_kid_friendly))
+
+kids_rating <- national_parks %>%
+  filter(name %!in% c("Olympic Peninsula Loop Drive", "West Yellowstone to Jackson Scenic Drive", "Joshua Tree National Park Scenic Drive"), 
+         kids == 1) %>%
+  group_by(area_name) %>%
+  summarize(kids_avg_rating= mean(avg_rating, na.rm = TRUE))
+
+kids_proportion <- kids_proportion %>%
+  inner_join(kids_rating, by = "area_name")
 ```
 
 ```{r}
-`%!in%` <- Negate(`%in%`)
-national_parks %>%
+kid_length_plot <- national_parks %>%
   filter(name %!in% c("Olympic Peninsula Loop Drive", "West Yellowstone to Jackson Scenic Drive", "Joshua Tree National Park Scenic Drive")) %>%
   left_join(kids_proportion, by = "area_name") %>%
-  mutate(area_name = as.factor(area_name)) %>%
-  ggplot(aes(y=fct_reorder(area_name, prop_kid_friendly)))+
+  mutate(area_name = as.factor(area_name), 
+         area_name = word(area_name, 1, -3)) %>%
+  ggplot(aes(y=fct_reorder(area_name, kids_yes)))+
   geom_density_ridges(
     aes(x=length_miles, fill = paste(area_name, kids)), 
     alpha = .8, color = "white", from = 0, to =40)+
@@ -99,14 +111,83 @@ national_parks %>%
   scale_fill_cyclical(
     breaks = c(0, 1),
     labels = c(`0` = "no_kids", `1` = "yes_kids"),
-    values = c("darkorange3", "dodgerblue1", "darkorange3", "dodgerblue4"),
+    values = c("darkorange3", "dodgerblue1", "darkorange3", "dodgerblue1"),
     name = "Option", guide = "legend"
   ) +
-  labs(x= "", y="", title = "Trail length (miles) for <strong><span style='color:dodgerblue3'>kid</span></strong></b> versus <strong><span style='color:darkorange3'>not kid</span></strong></b> recommended trails", caption = "Data from Kaggle taken from AllTrails")+
+  labs(x= "", y="", title = "Trail length (miles) for <strong><span style='color:dodgerblue3'>kid</span></strong></b> versus <strong><span style='color:darkorange3'>not kid</span></strong></b> recommended trails")+
   theme_minimal()+
   theme(plot.title.position = "plot", 
         panel.grid.major.x = element_blank(), 
         panel.grid.minor.x = element_blank(),
         plot.title = element_markdown(family = "mono", face = "bold"))
+kid_length_plot
 ```
+
+```{r}
+kid_prop_plot <- kids_proportion %>%
+  mutate(area_name = word(area_name, 1, -3)) %>%
+  ggplot(aes(y=fct_reorder(area_name, kids_yes), x=kids_yes))+
+  geom_col(aes(fill = kids_avg_rating)) + 
+  labs(y="", x="", 
+       title = "Number of trails that are <strong><span style='color:dodgerblue3'>kid friendly</span></strong></b>",
+       fill = "Avg <strong><span style='color:dodgerblue3'>kid friendly</span></strong></b> \ntrail rating")+
+  scale_x_continuous(expand = c(0,0))+
+  theme_minimal()+
+  theme(plot.title = element_markdown(family = "mono", face = "bold"),
+        legend.title = element_markdown(family = "mono", size = 7),
+        plot.title.position = "plot", 
+        panel.grid.major.x = element_blank(), 
+        panel.grid.minor.x = element_blank(), 
+        panel.grid.major.y = element_blank(), 
+        panel.grid.minor.y = element_blank())
+kid_prop_plot
+```
+
+```{r}
+layout <- c(
+  area(t = 2, l = 0, b = 15, r = 3), 
+  area(t = 16, l = 0, b = 29, r = 3)
+)
+kid_length_plot + kid_prop_plot + 
+  plot_layout(design = layout)
+```
+
+Recommend 2 trails at each national park:
+```{r}
+c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park")
+
+rec_parks <- national_parks %>%
+  filter(kids == 1, area_name == "Yellowstone National Park") %>%
+  arrange(desc(avg_rating, total_features))
+```
+
+```{r}
+recommend_trails <- national_parks %>%
+  filter(name %in% c("Peregrine Peak via Alum Cave Bluffs Trail", 
+                     "Clingmans Dome Observation Tower Trail", 
+                     "Grand Prismatic Hot Spring", 
+                     "Mystic Falls, Fairy Creek and Little Firehole Loop", 
+                     "Zion Canyon Overlook Trail", 
+                     "The Watchman Trail", 
+                     "Emerald Lake Trail", 
+                     "Dream Lake Trail", 
+                     "Hidden Falls Trail", 
+                     "String Lake Trail", 
+                     "Shoshone Point Trail", 
+                     "Grand Canyon Rim Trail", 
+                     "Ledges Trail", 
+                     "Brandywine Gorge Trail", 
+                     "Cadillac North Ridge Trail", 
+                     "Jordan Pond Full Loop Trail", 
+                     "Hoh Rain Forest Hall of Moss", 
+                     "Marymere Falls Trail", 
+                      "Ryan Mountain Trail", 
+                    "Hidden Valley Nature Trail")) %>%
+  select(area_name, name, length_miles, avg_rating, num_reviews)%>%
+  head(20) %>%
+  mutate(`noteable features` = c("views, wildlife", "views, wildlife", "hot springs, river", "hot springs, river, waterfall", "cave, trail running", "river, camping", "river, fishing, snowshoeing", "skiing, snowshoeing, rock climbing", "lake, beach, rock climbing, camping", "ada, beach, strollers, birding", "ada, strollers, birding, trail running", "ada, strollers", "historic site, trail running", "historic site, waterfall, river, fishing", "trail running, birding, wildlife", "lake, birding, trail running", "ada, strollers, camping, birding", "lake, waterfall, birding", "wildlife, views", "views, rock climbing, trail running"))
+```
+
+
+
 
