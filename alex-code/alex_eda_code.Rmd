@@ -54,7 +54,7 @@ unitedstates <- get_stamenmap(
 
 ggmap(unitedstates) +
   geom_point(data=national_parks, aes(x=long, y=lat, size=length_miles, color=area_name), alpha=.3) +
-  theme(plot.title = element_text(family = "mono", face = "bold"))
+  theme(text = element_text(family = "mono", face = "bold"))
 
 ```
 
@@ -63,11 +63,46 @@ Write a paragraph explaining the graph.
 ```{r}
 pal <- colorFactor(palette="viridis", domain=national_parks$area_name)
 
+
 leaflet(data=national_parks) %>% 
-  addProviderTiles(providers$Stamen.TonerLite) %>%
+  setMaxBounds( lng1 = -125.52
+                , lat1 = 57.87
+                , lng2 = -64.35
+                , lat2 = 19.11 ) %>%
+  addProviderTiles(providers$Stamen.TonerLite) %>% 
   addCircles(lng= ~long,
            lat = ~lat, 
            color= ~pal(area_name),
-           label= ~name, 
+           label= ~name,
            radius= ~length_miles) 
+  
+  
+  addLegend(position = "bottomright",
+            pal = pal, 
+            values = ~top_three,
+            title = "Top Three Favorite Places")
+ 
 ```
+```{r}
+top_park_location <- national_parks %>%
+  group_by(area_name) %>%
+  mutate(top_name = max(name)) 
+
+national_parks %>%
+  group_by(area_name) %>%
+  summarise(total_park_pop = sum(popularity)) %>%
+  ggplot(aes(y = fct_reorder(area_name, total_park_pop), x = total_park_pop)) +
+  geom_col(fill = "rosybrown2") +
+  geom_col(data = top_park_location, aes(y = top_name,
+                                          text = top_name),
+           fill = "lightcoral") +
+  geom_text(data = top_park_location, aes(y = top_name, label = top_name), hjust = 0) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_markdown(family = "mono", face = "bold")) +
+  labs(title = "Visitation at the Ten Most Popular National Parks",
+       y = "",
+       x = "",
+       caption = "Visualization: Katie Funk | Data from:")
+```
+
+
