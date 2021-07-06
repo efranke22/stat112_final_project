@@ -65,22 +65,21 @@ pal <- colorFactor(palette="viridis", domain=national_parks$area_name)
 
 
 leaflet(data=national_parks) %>% 
-  setMaxBounds( lng1 = -125.52
-                , lat1 = 57.87
-                , lng2 = -64.35
-                , lat2 = 19.11 ) %>%
+  setMaxBounds( lng1 = -145.22
+                , lat1 = 58.08
+                , lng2 = -51.01
+                , lat2 = 8.66 ) %>%
   addProviderTiles(providers$Stamen.TonerLite) %>% 
   addCircles(lng= ~long,
            lat = ~lat, 
            color= ~pal(area_name),
            label= ~name,
-           radius= ~length_miles) 
-  
-  
+           radius= ~length_miles) %>%
   addLegend(position = "bottomright",
             pal = pal, 
-            values = ~top_three,
-            title = "Top Three Favorite Places")
+            values = ~area_name,
+            title = "Top Ten Visited Parks in 2020", 
+            )
  
 ```
 ```{r}
