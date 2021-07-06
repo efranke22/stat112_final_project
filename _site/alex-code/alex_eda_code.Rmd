@@ -1,0 +1,73 @@
+---
+title: "Alex's EDA Code"
+author: "Alex Ang"
+date: "6/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(stringr)
+library(tidyr)
+library(maps)
+library(openintro)
+library(leaflet)
+library(tidyverse)     # for data cleaning and plotting
+library(lubridate)     # for date manipulation
+library(openintro)     # for the abbr2state() function
+library(palmerpenguins)# for Palmer penguin data
+library(maps)          # for map data
+library(ggmap)         # for mapping points on maps
+library(gplots)        # for col2hex() function
+library(RColorBrewer)  # for color palettes
+library(sf)            # for working with spatial data
+library(leaflet)       # for highly customizable mapping
+library(carData)       # for Minneapolis police stops data
+library(ggthemes)   
+library(ggtext)
+theme_set(theme_minimal())
+```
+
+```{r}
+nationalpark <- read_csv("../data/nationalpark.csv")
+
+data(nationalpark)
+```
+
+```{r}
+national_parks <- nationalpark %>%
+  mutate(lat = as.numeric(substr(`_geoloc`, 9, 16)), 
+         long = as.numeric(substr(`_geoloc`, 26,33)), 
+         length_miles = round(length/5280, 3), 
+         ) %>%
+  select(name, area_name, lat, long, city_name, state_name, popularity, length_miles, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) %>%
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park"))
+
+unitedstates <- get_stamenmap(
+    bbox = c(left = -130.15, bottom = 19.10, right = -60.64, top = 55.77), 
+    maptype = "terrain",
+    zoom = 4)
+
+ggmap(unitedstates) +
+  geom_point(data=national_parks, aes(x=long, y=lat, size=length_miles, color=area_name), alpha=.3) +
+  theme(plot.title = element_text(family = "mono", face = "bold"))
+
+```
+
+Write a paragraph explaining the graph. 
+
+```{r}
+pal <- colorFactor(palette="viridis", domain=national_parks$area_name)
+
+leaflet(data=national_parks) %>% 
+  addProviderTiles(providers$Stamen.TonerLite) %>%
+  addCircles(lng= ~long,
+           lat = ~lat, 
+           color= ~pal(area_name),
+           label= ~name, 
+           radius= ~length_miles) 
+```

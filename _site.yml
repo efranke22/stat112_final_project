@@ -1,0 +1,10 @@
+name: "website"
+title: ""
+description: |
+  A look at the US top 10 most visited National Parks in 2020
+output_dir: "_site"
+navbar:
+  right:
+    - text: "Home"
+      href: index.html
+output: distill::distill_article

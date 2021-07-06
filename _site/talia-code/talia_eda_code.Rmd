@@ -1,0 +1,165 @@
+---
+title: "Talia's EDA Code"
+author: "Talia Chait"
+date: "6/28/2021"
+output:
+  output: 
+  html_document:
+    keep_md: TRUE
+    toc: TRUE
+    toc_float: TRUE
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+library(tidyverse)     
+library(lubridate)     # for date manipulation
+library(openintro)     # for the abbr2state() function
+library(maps)          # for map data
+library(ggmap)         # for mapping points on maps
+library(gplots)        # for col2hex() function
+library(RColorBrewer)  # for color palettes
+library(sf)            # for working with spatial data
+library(leaflet)       # for highly customizable mapping
+library(ggthemes)      # for more themes (including theme_map())
+library(plotly)  
+library(stringr)       # for the ggplotly() - basic interactivity
+library(gganimate)     # for adding animation layers to ggplots
+library(gifski)        # for creating the gif (don't need to load this library every time,but need it installed)
+library(transformr)    # for "tweening" (gganimate)
+library(shiny)         # for creating interactive apps
+library(patchwork)     # for nicely combining ggplot2 graphs  
+library(gt)            # for creating nice tables
+library(rvest)  
+library(ggtext)       # for scraping data
+library(robotstxt)     # for checking if you can scrape data
+library(nationalparkcolors)  # colors of national parks 
+theme_set(theme_minimal())
+```
+
+```{r}
+nationalparks <- read_csv("https://raw.githubusercontent.com/efranke22/stat112_final_project/main/nationalpark.csv")
+```
+
+
+```{r}
+national_parks <- nationalparks %>%
+  mutate(lat = as.numeric(substr(`_geoloc`, 9, 16)), 
+         long = as.numeric(substr(`_geoloc`, 26,33)), 
+         length_miles = round(length/5280, 3), 
+         ) %>%
+  select(name, area_name, lat, long, city_name, state_name, popularity, length_miles, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) %>%
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park"))  %>% 
+  mutate(no_dogs = as.numeric(str_detect(features, "dogs-no")), 
+         river = as.numeric(str_detect(features, "river")), 
+         views = as.numeric(str_detect(features, "views")), 
+         wildflowers = as.numeric(str_detect(features, "wild-flowers")), 
+         wildlife = as.numeric(str_detect(features, "wildlife")), 
+         cave = as.numeric(str_detect(features, "cave")), 
+         forest = as.numeric(str_detect(features, "forest")), 
+         partially_paved = as.numeric(str_detect(features, "partially-paved")), 
+         ada = as.numeric(str_detect(features, "ada")), 
+         waterfall = as.numeric(str_detect(features, "waterfall")), 
+         kids = as.numeric(str_detect(features, "kids")), 
+         paved = as.numeric(str_detect(features, "paved")), 
+         beach = as.numeric(str_detect(features, "beach")), 
+         strollers = as.numeric(str_detect(features, "strollers")), 
+         dogs_leash = as.numeric(str_detect(features, "dogs-leash")), 
+         historic_site = as.numeric(str_detect(features, "historic-site")), 
+         lake = as.numeric(str_detect(features, "lake")), 
+         hiking = as.numeric(str_detect(activities, "hiking")), 
+         nature_trips = as.numeric(str_detect(activities, "nature-trips")), 
+         trail_running = as.numeric(str_detect(activities, "trail-running")), 
+         birding = as.numeric(str_detect(activities, "birding")), 
+         fishing = as.numeric(str_detect(activities, "fishing")), 
+         walking = as.numeric(str_detect(activities, "walking")), 
+         backpacking = as.numeric(str_detect(activities, "backpacking")), 
+         camping = as.numeric(str_detect(activities, "camping")), 
+         road_biking = as.numeric(str_detect(activities, "road-biking")), 
+         rock_climbing = as.numeric(str_detect(activities, "rock-climbing")), 
+         cross_country_skiing = as.numeric(str_detect(activities, "cross-country-skiing")), 
+         paddle_sports = as.numeric(str_detect(activities, "paddle-sports")), 
+         snowshoeing = as.numeric(str_detect(activities, "snowshoeing")), 
+         fly_fishing = as.numeric(str_detect(activities, "fly-fishing")), 
+         horseback_riding = as.numeric(str_detect(activities, "horseback-riding")), 
+         mountain_biking = as.numeric(str_detect(activities, "mountain-biking")), 
+         scenic_driving = as.numeric(str_detect(activities, "scenic-driving")), 
+         bike_touring = as.numeric(str_detect(activities, "bike-touring")), 
+         off_road_driving = as.numeric(str_detect(activities, "off-road-driving")))
+national_parks$total_features <- rowSums(national_parks[17:52])
+```
+
+
+```{r}
+national_parks %>% 
+  group_by(area_name, route_type) %>% 
+  summarize(nroutetype = n()) %>% 
+  ggplot(mapping = aes(x = fct_reorder(area_name, nroutetype, .desc = FALSE), 
+                       y = nroutetype,
+                       fill = route_type)) + 
+  geom_col(position = "stack") +
+  coord_flip() + 
+  scale_fill_manual(values = c("turquoise3", "salmon2", "gold2")) +
+  labs(x = "",
+       y = "",
+       title = "**Total Number of Trails in the Top 10 National Parks by Route Type**",
+       subtitle = "<span style='font-size:11pt'> Route types are **<span style='color:gold2;'>point to point</span>**, **<span style='color: salmon2;'>out and back</span>**, and **<span style = 'color: turquoise3;'>loop</span>**",
+       fill = "",
+       caption = "Plot created by Talia | Data from Kaggle taken from AllTrails") +
+  theme(legend.position = "none",
+        plot.title.position = "plot",
+        plot.title = element_markdown(family = "mono"),
+        plot.subtitle = element_markdown(family = "mono"))
+```
+
+
+
+
+
+```{r}
+national_parks %>% 
+  group_by(area_name) %>% 
+  ggplot(aes(x = length_miles)) + 
+  geom_density(fill = "#9FC2B2") +
+  scale_x_continuous(breaks = c(0, 10, 20, 30, 40, 50, 60), 
+                     limits = c(0, 65), 
+                     expand = c(0, 0)) +
+  labs(x = "",
+       y = "",
+       title = "**Density Plot of Different Trail Lengths (in miles)**",
+       subtitle = "<span style='font-size:11pt'> For Top 10 National Parks",
+       caption = "Plot created by Talia | Data from Kaggle taken from AllTrails") +
+  theme(plot.title.position = "plot",
+        plot.title = element_markdown(family = "mono"),
+        plot.subtitle = element_markdown(family = "mono")) +
+  geom_curve(aes(x = 12, y = 0.20, xend = 2, yend = 0.25),
+             arrow = arrow(length = unit(0.03, "npc"))) +
+  annotate(geom = "text", 
+           y = 0.19,
+           x = 12, 
+           label = "The majority of trail lengths 
+                     are between 0 and 10 miles!", 
+           cex = 3)
+```
+
+```{r}
+national_parks %>% 
+  group_by(area_name) %>% 
+  ggplot(aes(x = elevation_gain)) + 
+  geom_density(fill = "#BFC4C5") +
+  scale_x_continuous(breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000), 
+                     limits = c(0, 6500), 
+                     expand = c(0, 0)) +
+  labs(x = "",
+       y = "",
+       title = "**Density Plot of Different Trail Elevations**",
+       subtitle = "<span style='font-size:11pt'> For Top 10 National Parks",
+       caption = "Plot created by Talia | Data from Kaggle taken from AllTrails") +
+  theme(plot.title.position = "plot",
+        plot.title = element_markdown(family = "mono"),
+        plot.subtitle = element_markdown(family = "mono")) 
+```

@@ -1,0 +1,217 @@
+---
+title: "Erin's EDA Code"
+author: "Erin Franke"
+date: "6/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(readr)
+library(tidyverse)
+library(stringr)
+library(tidyr)
+library(ggridges)
+library(nationalparkcolors)
+library(ggthemes) 
+library(ggtext)
+library(patchwork)
+library(gt)
+nationalpark <- read_csv("../data/nationalpark.csv")
+`%!in%` <- Negate(`%in%`)
+```
+
+Clean the data 
+```{r}
+national_parks <- nationalpark %>%
+  mutate(lat = as.numeric(substr(`_geoloc`, 9, 16)), 
+         long = as.numeric(substr(`_geoloc`, 26,33)), 
+         length_miles = round(length/5280, 3), 
+         ) %>%
+  select(name, area_name, lat, long, city_name, state_name, popularity, length_miles, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) %>%
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park")) %>%
+  mutate(no_dogs = as.numeric(str_detect(features, "dogs-no")), 
+         river = as.numeric(str_detect(features, "river")), 
+         views = as.numeric(str_detect(features, "views")), 
+         wildflowers = as.numeric(str_detect(features, "wild-flowers")), 
+         wildlife = as.numeric(str_detect(features, "wildlife")), 
+         cave = as.numeric(str_detect(features, "cave")), 
+         forest = as.numeric(str_detect(features, "forest")), 
+         partially_paved = as.numeric(str_detect(features, "partially-paved")), 
+         ada = as.numeric(str_detect(features, "ada")), 
+         waterfall = as.numeric(str_detect(features, "waterfall")), 
+         kids = as.numeric(str_detect(features, "kids")), 
+         paved = as.numeric(str_detect(features, "paved")), 
+         beach = as.numeric(str_detect(features, "beach")), 
+         strollers = as.numeric(str_detect(features, "strollers")), 
+         dogs_leash = as.numeric(str_detect(features, "dogs-leash")), 
+         historic_site = as.numeric(str_detect(features, "historic-site")), 
+         lake = as.numeric(str_detect(features, "lake")), 
+         hiking = as.numeric(str_detect(activities, "hiking")), 
+         nature_trips = as.numeric(str_detect(activities, "nature-trips")), 
+         trail_running = as.numeric(str_detect(activities, "trail-running")), 
+         birding = as.numeric(str_detect(activities, "birding")), 
+         fishing = as.numeric(str_detect(activities, "fishing")), 
+         walking = as.numeric(str_detect(activities, "walking")), 
+         backpacking = as.numeric(str_detect(activities, "backpacking")), 
+         camping = as.numeric(str_detect(activities, "camping")), 
+         road_biking = as.numeric(str_detect(activities, "road-biking")), 
+         rock_climbing = as.numeric(str_detect(activities, "rock-climbing")), 
+         cross_country_skiing = as.numeric(str_detect(activities, "cross-country-skiing")), 
+         paddle_sports = as.numeric(str_detect(activities, "paddle-sports")), 
+         snowshoeing = as.numeric(str_detect(activities, "snowshoeing")), 
+         fly_fishing = as.numeric(str_detect(activities, "fly-fishing")), 
+         horseback_riding = as.numeric(str_detect(activities, "horseback-riding")), 
+         mountain_biking = as.numeric(str_detect(activities, "mountain-biking")), 
+         scenic_driving = as.numeric(str_detect(activities, "scenic-driving")), 
+         bike_touring = as.numeric(str_detect(activities, "bike-touring")), 
+         off_road_driving = as.numeric(str_detect(activities, "off-road-driving")))
+national_parks$total_features <- rowSums(national_parks[17:52])
+```
+
+What parks and trails are best for kids?
+```{r}
+#483 out of the 1,530 trails at the top 10 most visited national parks are good for kids
+sum(national_parks$kids)
+
+#find proportion of trails at each park that are considered kid friendly
+kids_proportion <- national_parks %>%
+  filter(name %!in% c("Olympic Peninsula Loop Drive", "West Yellowstone to Jackson Scenic Drive", "Joshua Tree National Park Scenic Drive")) %>%
+  group_by(area_name, kids) %>%
+  count() %>%
+  pivot_wider(id_cols = area_name, names_from = kids, values_from = n) %>%
+  rename(kids_no = `0`, kids_yes = `1`) %>%
+  mutate(prop_kid_friendly = round(kids_yes / (kids_yes + kids_no),3)) %>%
+  arrange(desc(prop_kid_friendly))
+
+kids_rating <- national_parks %>%
+  filter(name %!in% c("Olympic Peninsula Loop Drive", "West Yellowstone to Jackson Scenic Drive", "Joshua Tree National Park Scenic Drive"), 
+         kids == 1) %>%
+  group_by(area_name) %>%
+  summarize(kids_avg_rating= mean(avg_rating, na.rm = TRUE))
+
+kids_proportion <- kids_proportion %>%
+  inner_join(kids_rating, by = "area_name")
+```
+
+```{r}
+kid_length_plot <- national_parks %>%
+  filter(name %!in% c("Olympic Peninsula Loop Drive", "West Yellowstone to Jackson Scenic Drive", "Joshua Tree National Park Scenic Drive")) %>%
+  left_join(kids_proportion, by = "area_name") %>%
+  mutate(area_name = as.factor(area_name), 
+         area_name = word(area_name, 1, -3)) %>%
+  ggplot(aes(y=fct_reorder(area_name, kids_yes)))+
+  geom_density_ridges(
+    aes(x=length_miles, fill = paste(area_name, kids)), 
+    alpha = .8, color = "white", from = 0, to =40)+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(breaks = c(0, 2, 4,6, 8, 10), limits = c(0, 10), expand = c(0, 0)) +
+  scale_fill_cyclical(
+    breaks = c(0, 1),
+    labels = c(`0` = "no_kids", `1` = "yes_kids"),
+    values = c("salmon2", "turquoise3", "salmon2", "turquoise3"),
+    name = "Option", guide = "legend"
+  ) +
+  labs(x= "", y="", title = "Trail length (miles) for <strong><span style='color:turquoise3'>kid</span></strong></b> versus <strong><span style='color:salmon2'>not kid</span></strong></b> recommended trails")+
+  theme_minimal()+
+  theme(plot.title.position = "plot", 
+        panel.grid.major.x = element_blank(), 
+        panel.grid.minor.x = element_blank(),
+        plot.title = element_markdown(family = "mono", face = "bold"))
+kid_length_plot
+```
+
+```{r}
+kid_prop_plot <- kids_proportion %>%
+  mutate(area_name = word(area_name, 1, -3)) %>%
+  ggplot(aes(y=fct_reorder(area_name, kids_yes), x=kids_yes))+
+  geom_col(aes(fill = kids_avg_rating)) + 
+  labs(y="", x="", 
+       title = "Number of trails that are <strong><span style='color:dodgerblue3'>kid friendly</span></strong></b>",
+       fill = "Avg <strong><span style='color:dodgerblue3'>kid friendly</span></strong></b> \ntrail rating")+
+  scale_x_continuous(expand = c(0,0))+
+  theme_minimal()+
+  theme(plot.title = element_markdown(family = "mono", face = "bold"),
+        legend.title = element_markdown(family = "mono", size = 7),
+        plot.title.position = "plot", 
+        panel.grid.major.x = element_blank(), 
+        panel.grid.minor.x = element_blank(), 
+        panel.grid.major.y = element_blank(), 
+        panel.grid.minor.y = element_blank())
+kid_prop_plot
+```
+
+```{r}
+recommend_trails <- national_parks %>%
+  filter(name %in% c("Peregrine Peak via Alum Cave Bluffs Trail", 
+                     "Clingmans Dome Observation Tower Trail", 
+                     "Grand Prismatic Hot Spring", 
+                     "Mystic Falls, Fairy Creek and Little Firehole Loop", 
+                     "Zion Canyon Overlook Trail", 
+                     "The Watchman Trail", 
+                     "Emerald Lake Trail", 
+                     "Dream Lake Trail", 
+                     "Hidden Falls Trail", 
+                     "String Lake Trail", 
+                     "Shoshone Point Trail", 
+                     "Grand Canyon Rim Trail", 
+                     "Ledges Trail", 
+                     "Brandywine Gorge Trail", 
+                     "Cadillac North Ridge Trail", 
+                     "Jordan Pond Full Loop Trail", 
+                     "Hoh Rain Forest Hall of Moss", 
+                     "Marymere Falls Trail", 
+                      "Ryan Mountain Trail", 
+                    "Hidden Valley Nature Trail")) %>%
+  select(area_name, name, length_miles, avg_rating, num_reviews)%>%
+  head(20) %>%
+  mutate(`noteable features` = c("views, wildlife", "views, wildlife", "hot springs, river", "hot springs, river, waterfall", "cave, trail running", "river, camping", "river, fishing, snowshoeing", "skiing, snowshoeing, rock climbing", "lake, beach, rock climbing, camping", "ada, beach, strollers, birding", "ada, strollers, birding, trail running", "ada, strollers", "historic site, trail running", "historic site, waterfall, river, fishing", "trail running, birding, wildlife", "lake, birding, trail running", "ada, strollers, camping, birding", "lake, waterfall, birding", "wildlife, views", "views, rock climbing, trail running")) %>%
+  rename(Park = area_name, Trail = name, `Length (miles)` = length_miles, `Avg rating` = avg_rating, `Number reivews` = num_reviews, `Noteable features` = `noteable features`) %>%
+  arrange(Park, Trail)
+
+trail_recs_table <- recommend_trails %>%
+  gt() %>%
+  tab_header(
+    title = md("**Exciting trails for kids**"),
+    subtitle = md("**Two kid recommended trails from each of the top 10 most visited national parks**")
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "lightgoldenrodyellow"),
+    locations = cells_body(
+      rows = Park %in% c("Acadia National Park", "Grand Canyon National Park", "Great Smoky Mountains National Park", "Olympic National Park", "Yellowstone National Park"))) %>%
+  tab_style(
+    style = cell_fill(color = "lightcyan2"),
+    locations = cells_body(
+      rows = Park %!in% c("Acadia National Park", "Grand Canyon National Park", "Great Smoky Mountains National Park", "Olympic National Park", "Yellowstone National Park"))) %>%
+  tab_options(
+    table.font.size = px(13L)
+  )
+```
+
+Parks table 
+```{r}
+parks_table <- national_parks %>%
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park")) %>%
+  distinct(area_name) %>%
+  mutate(index  = c(6, 10, 4, 8, 2, 1, 7, 3, 9, 5)) %>%
+  arrange(index) %>%
+  select(area_name) %>%
+  rename(Park = area_name) %>%
+  gt() %>%
+  cols_label(
+    Park = md("**Top 10 most visited US National Parks**")) %>%
+  tab_style(
+    style = cell_fill(color = "lightcyan2"),
+    locations = cells_body(
+      rows = Park %in% c("Great Smoky Mountains National Park", "Zion National Park", "Grand Teton National Park", "Olympic National Park", "Cuyahoga Valley National Park"))) %>%
+  tab_style(
+    style = cell_fill(color = "lightgoldenrodyellow"),
+    locations = cells_body(
+      rows = Park %!in% c("Great Smoky Mountains National Park", "Zion National Park", "Grand Teton National Park", "Olympic National Park", "Cuyahoga Valley National Park")))
+```
+
+
+

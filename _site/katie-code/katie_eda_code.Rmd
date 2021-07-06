@@ -1,0 +1,83 @@
+---
+title: "Katie's EDA Code"
+author: "Katie Funk"
+date: "6/28/2021"
+output: html_document:
+    keep_md: TRUE
+    toc: TRUE
+    toc_float: TRUE
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)     
+library(lubridate)     # for date manipulation
+library(openintro)     # for the abbr2state() function
+library(maps)          # for map data
+library(ggmap)         # for mapping points on maps
+library(gplots)        # for col2hex() function
+library(RColorBrewer)  # for color palettes
+library(sf)            # for working with spatial data
+library(leaflet)       # for highly customizable mapping
+library(ggthemes)      # for more themes (including theme_map())
+library(plotly)        # for the ggplotly() - basic interactivity
+library(gganimate)     # for adding animation layers to ggplots
+library(gifski)        # for creating the gif (don't need to load this library every time,but need it installed)
+library(transformr)    # for "tweening" (gganimate)
+library(shiny)         # for creating interactive apps
+library(patchwork)     # for nicely combining ggplot2 graphs  
+library(gt)            # for creating nice tables
+library(rvest)         # for scraping data
+library(robotstxt)     # for checking if you can scrape data
+theme_set(theme_minimal())
+```
+
+```{r}
+library(readr)
+library(tidyverse)
+library(stringr)
+library(tidyr)
+nationalpark <- read_csv("../data/nationalpark.csv")
+```
+
+
+
+
+
+```{r}
+national_parks <- nationalpark %>%
+  mutate(lat = as.numeric(substr(`_geoloc`, 9, 16)), 
+         long = as.numeric(substr(`_geoloc`, 26,33)), 
+         length_miles = round(length/5280, 3), 
+         ) %>%
+  select(name, area_name, lat, long, city_name, state_name, popularity, length_miles, elevation_gain, difficulty_rating, route_type, visitor_usage, avg_rating, num_reviews, features, activities) %>%
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park"))
+```
+
+```{r}
+national_parks %>%
+  group_by(area_name) %>%
+  summarize(total_park_pop = sum(popularity)) %>%
+  ggplot(aes(y = fct_reorder(area_name, total_park_pop), x = total_park_pop)) +
+  geom_col() +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_text(hjust = 3.5)) +
+  labs(title = "Visitation at the Ten Most Popular National Parks",
+       y = "",
+       x = "",
+       caption = "Visualization: Katie Funk | Data from:")
+```
+```{r}
+top_park_location <- national_parks %>%
+  group_by(area_name) %>%
+  mutate(top_name = max(name)) %>%
+  filter(name %in% c("Yavapai Point via Rim Trail", "Wonderland Wash","Ypsilon Lake Trail", "Wonsqueak Bike Path Loop", "Yellowstone River Trail","Wolf Ridge Trail to Gregory Bald", "Wetmore, Lake and Salt Run Trail Loop","Zion Traverse: Lee Pass to East Rim Trailhead"))
+```
+
+
+
+
