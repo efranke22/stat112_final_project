@@ -82,26 +82,6 @@ leaflet(data=national_parks) %>%
             )
  
 ```
-```{r}
-top_park_location <- national_parks %>%
-  group_by(area_name) %>%
-  mutate(top_name = max(name)) 
 
-national_parks %>%
-  group_by(area_name) %>%
-  summarise(total_park_pop = sum(popularity)) %>%
-  ggplot(aes(y = fct_reorder(area_name, total_park_pop), x = total_park_pop)) +
-  geom_col(fill = "rosybrown2") +
-  geom_col(data = top_park_location, aes(y = top_name,
-                                          text = top_name),
-           fill = "lightcoral") +
-  geom_text(data = top_park_location, aes(y = top_name, label = top_name), hjust = 0) +
-  theme(panel.grid.major.y = element_blank(),
-        plot.title = element_markdown(family = "mono", face = "bold")) +
-  labs(title = "Visitation at the Ten Most Popular National Parks",
-       y = "",
-       x = "",
-       caption = "Visualization: Katie Funk | Data from:")
-```
 
 
