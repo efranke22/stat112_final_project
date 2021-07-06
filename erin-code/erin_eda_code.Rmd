@@ -19,6 +19,7 @@ library(nationalparkcolors)
 library(ggthemes) 
 library(ggtext)
 library(patchwork)
+library(gt)
 nationalpark <- read_csv("../data/nationalpark.csv")
 `%!in%` <- Negate(`%in%`)
 ```
@@ -111,10 +112,10 @@ kid_length_plot <- national_parks %>%
   scale_fill_cyclical(
     breaks = c(0, 1),
     labels = c(`0` = "no_kids", `1` = "yes_kids"),
-    values = c("darkorange3", "dodgerblue1", "darkorange3", "dodgerblue1"),
+    values = c("salmon2", "turquoise3", "salmon2", "turquoise3"),
     name = "Option", guide = "legend"
   ) +
-  labs(x= "", y="", title = "Trail length (miles) for <strong><span style='color:dodgerblue3'>kid</span></strong></b> versus <strong><span style='color:darkorange3'>not kid</span></strong></b> recommended trails")+
+  labs(x= "", y="", title = "Trail length (miles) for <strong><span style='color:turquoise3'>kid</span></strong></b> versus <strong><span style='color:salmon2'>not kid</span></strong></b> recommended trails")+
   theme_minimal()+
   theme(plot.title.position = "plot", 
         panel.grid.major.x = element_blank(), 
@@ -144,24 +145,6 @@ kid_prop_plot
 ```
 
 ```{r}
-layout <- c(
-  area(t = 2, l = 0, b = 15, r = 3), 
-  area(t = 16, l = 0, b = 29, r = 3)
-)
-kid_length_plot + kid_prop_plot + 
-  plot_layout(design = layout)
-```
-
-Recommend 2 trails at each national park:
-```{r}
-c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park")
-
-rec_parks <- national_parks %>%
-  filter(kids == 1, area_name == "Yellowstone National Park") %>%
-  arrange(desc(avg_rating, total_features))
-```
-
-```{r}
 recommend_trails <- national_parks %>%
   filter(name %in% c("Peregrine Peak via Alum Cave Bluffs Trail", 
                      "Clingmans Dome Observation Tower Trail", 
@@ -185,9 +168,50 @@ recommend_trails <- national_parks %>%
                     "Hidden Valley Nature Trail")) %>%
   select(area_name, name, length_miles, avg_rating, num_reviews)%>%
   head(20) %>%
-  mutate(`noteable features` = c("views, wildlife", "views, wildlife", "hot springs, river", "hot springs, river, waterfall", "cave, trail running", "river, camping", "river, fishing, snowshoeing", "skiing, snowshoeing, rock climbing", "lake, beach, rock climbing, camping", "ada, beach, strollers, birding", "ada, strollers, birding, trail running", "ada, strollers", "historic site, trail running", "historic site, waterfall, river, fishing", "trail running, birding, wildlife", "lake, birding, trail running", "ada, strollers, camping, birding", "lake, waterfall, birding", "wildlife, views", "views, rock climbing, trail running"))
+  mutate(`noteable features` = c("views, wildlife", "views, wildlife", "hot springs, river", "hot springs, river, waterfall", "cave, trail running", "river, camping", "river, fishing, snowshoeing", "skiing, snowshoeing, rock climbing", "lake, beach, rock climbing, camping", "ada, beach, strollers, birding", "ada, strollers, birding, trail running", "ada, strollers", "historic site, trail running", "historic site, waterfall, river, fishing", "trail running, birding, wildlife", "lake, birding, trail running", "ada, strollers, camping, birding", "lake, waterfall, birding", "wildlife, views", "views, rock climbing, trail running")) %>%
+  rename(Park = area_name, Trail = name, `Length (miles)` = length_miles, `Avg rating` = avg_rating, `Number reivews` = num_reviews, `Noteable features` = `noteable features`) %>%
+  arrange(Park, Trail)
+
+trail_recs_table <- recommend_trails %>%
+  gt() %>%
+  tab_header(
+    title = md("**Exciting trails for kids**"),
+    subtitle = md("**Two kid recommended trails from each of the top 10 most visited national parks**")
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "lightgoldenrodyellow"),
+    locations = cells_body(
+      rows = Park %in% c("Acadia National Park", "Grand Canyon National Park", "Great Smoky Mountains National Park", "Olympic National Park", "Yellowstone National Park"))) %>%
+  tab_style(
+    style = cell_fill(color = "lightcyan2"),
+    locations = cells_body(
+      rows = Park %!in% c("Acadia National Park", "Grand Canyon National Park", "Great Smoky Mountains National Park", "Olympic National Park", "Yellowstone National Park"))) %>%
+  tab_options(
+    table.font.size = px(13L)
+  )
 ```
 
+Parks table 
+```{r}
+parks_table <- national_parks %>%
+  filter(area_name %in% c("Great Smoky Mountains National Park", "Yellowstone National Park", "Zion National Park", "Rocky Mountain National Park", "Grand Teton National Park", "Grand Canyon National Park", "Cuyahoga Valley National Park", "Acadia National Park", "Olympic National Park", "Joshua Tree National Park")) %>%
+  distinct(area_name) %>%
+  mutate(index  = c(6, 10, 4, 8, 2, 1, 7, 3, 9, 5)) %>%
+  arrange(index) %>%
+  select(area_name) %>%
+  rename(Park = area_name) %>%
+  gt() %>%
+  cols_label(
+    Park = md("**Top 10 most visited US National Parks**")) %>%
+  tab_style(
+    style = cell_fill(color = "lightcyan2"),
+    locations = cells_body(
+      rows = Park %in% c("Great Smoky Mountains National Park", "Zion National Park", "Grand Teton National Park", "Olympic National Park", "Cuyahoga Valley National Park"))) %>%
+  tab_style(
+    style = cell_fill(color = "lightgoldenrodyellow"),
+    locations = cells_body(
+      rows = Park %!in% c("Great Smoky Mountains National Park", "Zion National Park", "Grand Teton National Park", "Olympic National Park", "Cuyahoga Valley National Park")))
+```
 
 
 
