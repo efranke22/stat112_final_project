@@ -87,7 +87,7 @@ kids_proportion <- kids_proportion %>%
   inner_join(kids_rating, by = "area_name")
 ```
 
-### The top 10 most visited national parks in 2020
+### What were the top 10 most visited national parks in 2020?
 
 Here are the parks that we looked at in our analysis. 
 
@@ -112,9 +112,9 @@ national_parks %>%
       rows = Park %!in% c("Great Smoky Mountains National Park", "Zion National Park", "Grand Teton National Park", "Olympic National Park", "Cuyahoga Valley National Park")))
 ```
 
-### Trips to the National Parks with kids
+### Are there trails or parks that are more kid friendly than others?
 
-A final national parks topic we decided to focus on was the kid friendliness aspect of the national parks. Some trails, such as the famous Angel’s Landing at Zion National Park, have steep cliffs and are incredibly dangerous for young children. To help families more easily choose appropriate hiking trails on their trips, we summarized the data based on what trails has a feature listed as “kids”. The graph below shows the distribution of hiking distances for ten mile or less trails that are recommended as kid friendly versus not kid friendly. On the other hand, at all ten parks the large majority of kid friendly hiking trails are less than three miles. Out of all the parks, it seems that Acadia tends to have the highest proportion of less than three mile hikes (both kid and not kid friendly), with very few hikes in the 4-10 mile range.
+When you are planning a hiking trip with kids, you will probably want to do everything in your power to make it as painful as possible. In order to do this, we recommend going on trails that are more family friendly. Some trails, such as the famous Angel’s Landing at Zion National Park, have steep cliffs and are incredibly dangerous for young children. To help families more easily choose appropriate hiking trails on their trips, we summarized the data based on what trails has a feature listed as “kids”. In the graph below, we can see the distribution of hiking distances for ten mile or less trails that are classified as kid friendly versus not kid friendly. At all ten parks the large majority of kid friendly hiking trails are less than three miles, which makes sense. It seems that out of all the parks that Acadia tends to have the highest proportion of less than three mile hikes (both kid and not kid friendly), with very few hikes in the 4-10 mile range.
 
 ```{r, echo = FALSE}
 national_parks %>%
@@ -142,7 +142,7 @@ national_parks %>%
         plot.title = element_markdown(family = "mono", face = "bold", size = 10))
 ```
 
-After getting the sense that kid friendly trails tend to be shorter, we decided to look more into each park and see if there might be one that is more attractive to familie than another. To do this, we looked at the number of kid friendly trails and the average rating those trails got. The results are summarized below. 
+After getting the sense that kid friendly trails tend to be shorter, we decided to look more into each park and see if there might be one that is more attractive to families than another. To do this, we looked at the number of kid friendly trails and the average rating those trails got. The results are summarized below. 
 
 ```{r, echo = FALSE}
 kids_proportion %>%
@@ -163,9 +163,9 @@ kids_proportion %>%
         panel.grid.minor.y = element_blank())
 ```
 
-From this graph we can see both Yellowstone and Acadia have close to 80 kid recommended trails...it might take quite a few family vacations to cover all of those :) On the lower end are Grand Teton and Grand Canyon National with 24 and 27 kid recommended trails each. The graph is colored by average kid friendly trail rating. While Grand Teton has the fewest number of kid friendly trails - though still penty for a family vacation with over 52 miles of these trails - the average trail rating is the highest. Joshua Tree has the lowest average kid recommended trail rating at around 3.8/5. 
+From this graph we can see both Yellowstone and Acadia have close to 80 kid recommended trails...it might take quite a few family vacations to cover all of those :) On the lower end are Grand Teton and Grand Canyon National with 24 and 27 kid recommended trails each. The graph is colored by average kid friendly trail rating. While Grand Teton has the fewest number of kid friendly trails - though still plenty for a family vacation with over 52 miles of these trails - the average trail rating is the highest. Joshua Tree has the lowest average kid recommended trail rating at around 3.8/5. 
 
-To wrap up our discussion of the national parks and kid friendly trails, we recommended two family friendly trails from each of the ten parks we looked at. To choose these parks, we looked for trails within our data that have a high number of reviews and at least 4.5 stars. The table below highlights some details of these trails including a few of their unique features. 
+To wrap up our discussion of the national parks and kid friendly trails, we recommended two family friendly trails from each of the ten parks we looked at. To choose these parks, we looked for trails within our data that have a high number of reviews and at least 4.5 stars. The table below highlights some details of these trails including a few of their unique and/or exciting features. 
 
 ```{r, echo = FALSE}
 recommend_trails <- national_parks %>%
