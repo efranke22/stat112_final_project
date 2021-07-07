@@ -20,6 +20,21 @@ library(ggthemes)
 library(ggtext)
 library(patchwork)
 library(gt)
+library(maps)
+library(openintro)
+library(leaflet)
+library(lubridate)     # for date manipulation
+library(openintro)     # for the abbr2state() function
+library(palmerpenguins)# for Palmer penguin data
+library(maps)          # for map data
+library(ggmap)         # for mapping points on maps
+library(gplots)        # for col2hex() function
+library(RColorBrewer)  # for color palettes
+library(sf)            # for working with spatial data
+library(leaflet)       # for highly customizable mapping
+library(carData)       # for Minneapolis police stops data
+library(ggtext)
+theme_set(theme_minimal())
 nationalpark <- read_csv("data/nationalpark.csv")
 `%!in%` <- Negate(`%in%`)
 
@@ -111,6 +126,123 @@ national_parks %>%
     locations = cells_body(
       rows = Park %!in% c("Great Smoky Mountains National Park", "Zion National Park", "Grand Teton National Park", "Olympic National Park", "Cuyahoga Valley National Park")))
 ```
+
+	Of the top 10 national parks, first we first made a quick overview of all the trails together to give you a sense of the differences in length and elevation. As one can see, for the length (which is in miles) the majority of all the trails are between 0-10 miles long with some outsiders of more than 10 miles. As for elevation, the majority of all the trails have an elevation gain between 0 and 3,000 feet.
+
+```{r, echo = FALSE}
+plot1 <- national_parks %>% 
+  group_by(area_name) %>% 
+  ggplot(aes(x = length_miles)) + 
+  geom_density(fill = "salmon2") +
+  scale_x_continuous(breaks = c(0, 10, 20, 30, 40, 50, 60), 
+                     limits = c(0, 65), 
+                     expand = c(0, 0)) +
+  labs(x = "",
+       y = "",
+       title = "**Density Plot of Different Trail Lengths (in miles)**",
+       subtitle = "<span style='font-size:11pt'> For Top 10 National Parks",
+       caption = "") +
+  theme(plot.title.position = "plot",
+        plot.title = element_markdown(family = "mono"),
+        plot.subtitle = element_markdown(family = "mono")) +
+  geom_segment(aes(x = 12, y = 0.20, xend = 2, yend = 0.23),
+             arrow = arrow(length = unit(0.03, "npc"))) +
+  annotate(geom = "text", 
+           y = 0.15,
+           x = 12, 
+           label = "The majority of trail lengths 
+                     are between 0 and 10 miles!", 
+           cex = 3)
+
+plot2 <- national_parks %>% 
+  group_by(area_name) %>% 
+  ggplot(aes(x = elevation_gain)) + 
+  geom_density(fill = "turquoise3") +
+  scale_x_continuous(breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000), 
+                     limits = c(0, 6500), 
+                     expand = c(0, 0)) +
+  labs(x = "",
+       y = "",
+       title = "**Density Plot of Different Trail Elevations (in feet)**",
+       subtitle = "<span style='font-size:11pt'> For Top 10 National Parks",
+       caption = "") +
+  theme(plot.title.position = "plot",
+        plot.title = element_markdown(family = "mono"),
+        plot.subtitle = element_markdown(family = "mono")) 
+
+plot1 + plot2 +
+   plot_layout(ncol = 1, heights = c(5, 5))
+```
+
+### Where are these national parks located?
+
+Visually, we thought it would be helpful to plot the trails by park on a map of the United States. We can see the distribution of parks and their relative location on the US Map. After someone decides which park they want to visit, they can zoom in to find an interactive map showing the varying lengths (miles) of each trail within the top 10 parks. You can also hover over each of the trails to see them labeled by trail name. 
+
+```{r, echo = FALSE}
+unitedstates <- get_stamenmap(
+    bbox = c(left = -130.15, bottom = 19.10, right = -60.64, top = 55.77), 
+    maptype = "terrain",
+    zoom = 4)
+
+#ggmap(unitedstates) +
+#  geom_point(data=national_parks, aes(x=long, y=lat, size=length_miles, color=area_name), alpha=.3) +
+ # theme(text = element_text(family = "mono", face = "bold"))
+
+pal <- colorFactor(palette="viridis", domain=national_parks$area_name)
+
+
+leaflet(data=national_parks) %>% 
+  setMaxBounds( lng1 = -145.22
+                , lat1 = 58.08
+                , lng2 = -51.01
+                , lat2 = 8.66 ) %>%
+  addProviderTiles(providers$Stamen.TonerLite) %>% 
+  addCircles(lng= ~long,
+           lat = ~lat, 
+           color= ~pal(area_name),
+           label= ~name,
+           radius= ~length_miles) %>%
+  addLegend(position = "bottomright",
+            pal = pal, 
+            values = ~area_name,
+            title = "Top Ten Visited Parks in 2020", 
+            )
+```
+
+### Which parks are the most popular?
+
+In the United States, there are numerous parks someone can visit, but given time constraints, they might want to consider traveling to the most popular National Parks in the US. These parks are located all across the United States, and each has different amenities, and views to offer. Rocky Mountain National Park in Colorado(the most popular park in the US) offers mountainous views and hiking while Joshua Tree National Park in California gives its viewers the opportunity to wander through beautiful desert landscapes. 
+
+To ensure visitors get the best experience while visiting their National Park of choice, and get the opportunity to see the best sites, we found the hiking trails at each national park that have the most visitors. While these might not be everyone’s cup of tea(more touristy attractions than off the beaten path trails), they can provide casual campers with unforgettable experiences.
+
+### What are the different route types available? 
+
+On top of the prior aspects that we analyzed, we also decided to look into the route type of all the trails at the different national parks. Some trails are easy to follow when hiking while others require one to know where they are going. There are three route type categories: out and back, loop, and point to point. The graph below shows the number of trails per route type at each national park.
+
+```{r, echo = FALSE}
+national_parks %>%
+  group_by(area_name, route_type) %>% 
+  summarize(nroutetype = n()) %>% 
+  ungroup() %>% 
+  ggplot(mapping = aes(x = fct_reorder(area_name, nroutetype, sum, .desc = FALSE), 
+                       y = nroutetype,
+                       fill = route_type)) + 
+  geom_col(position = "stack") +
+  coord_flip() + 
+  scale_fill_manual(values = c("turquoise3", "salmon2", "gold2")) +
+  labs(x = "",
+       y = "",
+       title = "**Total Number of Trails in the Top 10 National Parks by Route Type**",
+       subtitle = "<span style='font-size:10pt'> Route types are **<span style='color:gold2;'>point to point</span>**, **<span style='color: salmon2;'>out and back</span>**, and **<span style = 'color: turquoise3;'>loop</span>**",
+       fill = "",
+       caption = "") +
+  theme(legend.position = "none",
+        plot.title.position = "plot",
+        plot.title = element_markdown(family = "mono", size = 11),
+        plot.subtitle = element_markdown(family = "mono"))
+```
+
+As one can see, the most popular route types are out and back and loop for all 10 parks. Specifically the out and back is likely more popular than the loop. Most of the parks have at least 50 + out and back trails with some of the larger parks having closer to 100+ out and back trails. While some route types may seem easier to hike than others, it is also important to look at the difficulty of the trail, especially if you have younger kids or are a less experienced hiker! 
 
 ### Are there trails or parks that are more kid friendly than others?
 
@@ -216,3 +348,4 @@ trail_recs_table
 ```
 
 We hope you enjoy your next trip to one of the many beautiful US national parks! 
+
