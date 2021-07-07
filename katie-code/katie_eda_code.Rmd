@@ -70,7 +70,8 @@ national_parks %>%
 ```{r}
 top_park_location <- national_parks %>%
   group_by(area_name) %>%
-  mutate(top_name = max(popularity))
+  filter(popularity == max(popularity))
+  
 
 national_parks %>%
   group_by(area_name) %>%
