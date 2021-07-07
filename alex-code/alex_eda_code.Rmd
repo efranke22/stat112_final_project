@@ -54,7 +54,7 @@ unitedstates <- get_stamenmap(
 
 ggmap(unitedstates) +
   geom_point(data=national_parks, aes(x=long, y=lat, size=length_miles, color=area_name), alpha=.3) +
-  theme(plot.title = element_text(family = "mono", face = "bold"))
+  theme(text = element_text(family = "mono", face = "bold"))
 
 ```
 
@@ -63,11 +63,25 @@ Write a paragraph explaining the graph.
 ```{r}
 pal <- colorFactor(palette="viridis", domain=national_parks$area_name)
 
+
 leaflet(data=national_parks) %>% 
-  addProviderTiles(providers$Stamen.TonerLite) %>%
+  setMaxBounds( lng1 = -145.22
+                , lat1 = 58.08
+                , lng2 = -51.01
+                , lat2 = 8.66 ) %>%
+  addProviderTiles(providers$Stamen.TonerLite) %>% 
   addCircles(lng= ~long,
            lat = ~lat, 
            color= ~pal(area_name),
-           label= ~name, 
-           radius= ~length_miles) 
+           label= ~name,
+           radius= ~length_miles) %>%
+  addLegend(position = "bottomright",
+            pal = pal, 
+            values = ~area_name,
+            title = "Top Ten Visited Parks in 2020", 
+            )
+ 
 ```
+
+
+
