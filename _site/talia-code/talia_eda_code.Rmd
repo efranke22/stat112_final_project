@@ -95,10 +95,11 @@ national_parks$total_features <- rowSums(national_parks[17:52])
 
 
 ```{r}
-national_parks %>% 
+national_parks %>%
   group_by(area_name, route_type) %>% 
   summarize(nroutetype = n()) %>% 
-  ggplot(mapping = aes(x = fct_reorder(area_name, nroutetype, .desc = FALSE), 
+  ungroup() %>% 
+  ggplot(mapping = aes(x = fct_reorder(area_name, nroutetype, sum, .desc = FALSE), 
                        y = nroutetype,
                        fill = route_type)) + 
   geom_col(position = "stack") +
@@ -109,7 +110,7 @@ national_parks %>%
        title = "**Total Number of Trails in the Top 10 National Parks by Route Type**",
        subtitle = "<span style='font-size:11pt'> Route types are **<span style='color:gold2;'>point to point</span>**, **<span style='color: salmon2;'>out and back</span>**, and **<span style = 'color: turquoise3;'>loop</span>**",
        fill = "",
-       caption = "Plot created by Talia | Data from Kaggle taken from AllTrails") +
+       caption = "") +
   theme(legend.position = "none",
         plot.title.position = "plot",
         plot.title = element_markdown(family = "mono"),
@@ -121,10 +122,10 @@ national_parks %>%
 
 
 ```{r}
-national_parks %>% 
+plot1 <- national_parks %>% 
   group_by(area_name) %>% 
   ggplot(aes(x = length_miles)) + 
-  geom_density(fill = "#9FC2B2") +
+  geom_density(fill = "salmon2") +
   scale_x_continuous(breaks = c(0, 10, 20, 30, 40, 50, 60), 
                      limits = c(0, 65), 
                      expand = c(0, 0)) +
@@ -132,14 +133,14 @@ national_parks %>%
        y = "",
        title = "**Density Plot of Different Trail Lengths (in miles)**",
        subtitle = "<span style='font-size:11pt'> For Top 10 National Parks",
-       caption = "Plot created by Talia | Data from Kaggle taken from AllTrails") +
+       caption = "") +
   theme(plot.title.position = "plot",
         plot.title = element_markdown(family = "mono"),
         plot.subtitle = element_markdown(family = "mono")) +
-  geom_curve(aes(x = 12, y = 0.20, xend = 2, yend = 0.25),
+  geom_segment(aes(x = 12, y = 0.20, xend = 2, yend = 0.23),
              arrow = arrow(length = unit(0.03, "npc"))) +
   annotate(geom = "text", 
-           y = 0.19,
+           y = 0.15,
            x = 12, 
            label = "The majority of trail lengths 
                      are between 0 and 10 miles!", 
@@ -147,19 +148,25 @@ national_parks %>%
 ```
 
 ```{r}
-national_parks %>% 
+plot2 <- national_parks %>% 
   group_by(area_name) %>% 
   ggplot(aes(x = elevation_gain)) + 
-  geom_density(fill = "#BFC4C5") +
+  geom_density(fill = "turquoise3") +
   scale_x_continuous(breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000), 
                      limits = c(0, 6500), 
                      expand = c(0, 0)) +
   labs(x = "",
        y = "",
-       title = "**Density Plot of Different Trail Elevations**",
+       title = "**Density Plot of Different Trail Elevations (in feet)**",
        subtitle = "<span style='font-size:11pt'> For Top 10 National Parks",
-       caption = "Plot created by Talia | Data from Kaggle taken from AllTrails") +
+       caption = "") +
   theme(plot.title.position = "plot",
         plot.title = element_markdown(family = "mono"),
         plot.subtitle = element_markdown(family = "mono")) 
+```
+
+
+```{r}
+plot1 + plot2 +
+   plot_layout(ncol = 1, heights = c(5, 5))
 ```
