@@ -81,7 +81,7 @@ national_parks %>%
   geom_col(data = top_park_location, aes(y = area_name, x = popularity),
            fill = "gold2") +
   geom_text(data = top_park_location, aes(y = area_name, x = popularity,
-                                          label = name),hjust = 0) +
+                                          label = name),hjust = 0, size = 2.5) +
   theme(panel.grid.major.y = element_blank(),
         plot.title = element_markdown(family = "mono", face = "bold"),
         plot.title.position = "plot") +
