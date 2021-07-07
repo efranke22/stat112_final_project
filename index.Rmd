@@ -127,7 +127,9 @@ national_parks %>%
       rows = Park %!in% c("Great Smoky Mountains National Park", "Zion National Park", "Grand Teton National Park", "Olympic National Park", "Cuyahoga Valley National Park")))
 ```
 
-	Of the top 10 national parks, first we first made a quick overview of all the trails together to give you a sense of the differences in length and elevation. As one can see, for the length (which is in miles) the majority of all the trails are between 0-10 miles long with some outsiders of more than 10 miles. As for elevation, the majority of all the trails have an elevation gain between 0 and 3,000 feet.
+
+Of the top 10 national parks, first we first made a quick overview of all the trails together to give you a sense of the differences in length and elevation. As one can see, for the length (which is in miles) the majority of all the trails are between 0-10 miles long with some outsiders of more than 10 miles. As for elevation, the majority of all the trails have an elevation gain between 0 and 3,000 feet.
+
 
 ```{r, echo = FALSE}
 plot1 <- national_parks %>% 
@@ -214,6 +216,29 @@ leaflet(data=national_parks) %>%
 In the United States, there are numerous parks someone can visit, but given time constraints, they might want to consider traveling to the most popular National Parks in the US. These parks are located all across the United States, and each has different amenities, and views to offer. Rocky Mountain National Park in Colorado(the most popular park in the US) offers mountainous views and hiking while Joshua Tree National Park in California gives its viewers the opportunity to wander through beautiful desert landscapes. 
 
 To ensure visitors get the best experience while visiting their National Park of choice, and get the opportunity to see the best sites, we found the hiking trails at each national park that have the most visitors. While these might not be everyone’s cup of tea(more touristy attractions than off the beaten path trails), they can provide casual campers with unforgettable experiences.
+
+```{r, echo = FALSE}
+top_park_location <- national_parks %>%
+  group_by(area_name) %>%
+  filter(popularity == max(popularity))
+  
+
+national_parks %>%
+  group_by(area_name) %>%
+  summarise(total_park_pop = sum(popularity)) %>%
+  ggplot(aes(y = fct_reorder(area_name, total_park_pop), x = total_park_pop)) +
+  geom_col(fill = "salmon2") +
+  geom_col(data = top_park_location, aes(y = area_name, x = popularity),
+           fill = "gold2") +
+  geom_text(data = top_park_location, aes(y = area_name, x = popularity,
+                                          label = name),hjust = 0) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_markdown(family = "mono", face = "bold"),
+        plot.title.position = "plot") +
+  labs(title = "Visitation at the Ten Most Popular National Parks",
+       y = "",
+       x = "")
+```
 
 ### What are the different route types available? 
 
