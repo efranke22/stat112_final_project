@@ -102,6 +102,8 @@ kids_proportion <- kids_proportion %>%
   inner_join(kids_rating, by = "area_name")
 ```
 
+Are you a hiker? Do you enjoy the natural beauties of our earth? Well, you are in luck because we have analyzed some data about the top 10 national parks that were visited in 2020 to help you decide where your next adventure will take place.
+
 ### What were the top 10 most visited national parks in 2020?
 
 Here are the parks that we looked at in our analysis. 
@@ -128,7 +130,7 @@ national_parks %>%
 ```
 
 
-Of the top 10 national parks, first we first made a quick overview of all the trails together to give you a sense of the differences in length and elevation. As one can see, for the length (which is in miles) the majority of all the trails are between 0-10 miles long with some outsiders of more than 10 miles. As for elevation, the majority of all the trails have an elevation gain between 0 and 3,000 feet.
+Of the top 10 national parks, we first made a quick overview of all the trails together to give you a sense of the differences in length and elevation. As one can see, for the length (which is in miles) the majority of all the trails are between 0-10 miles long with some outsiders of more than 10 miles. As for elevation, the majority of all the trails have an elevation gain between 0 and 3,000 feet.
 
 
 ```{r, echo = FALSE}
@@ -231,7 +233,7 @@ national_parks %>%
   geom_col(data = top_park_location, aes(y = area_name, x = popularity),
            fill = "gold2") +
   geom_text(data = top_park_location, aes(y = area_name, x = popularity,
-                                          label = name),hjust = 0) +
+                                          label = name),hjust = 0, size = 2.5, family = "mono", face = "bold") +
   theme(panel.grid.major.y = element_blank(),
         plot.title = element_markdown(family = "mono", face = "bold"),
         plot.title.position = "plot") +
@@ -271,7 +273,7 @@ As one can see, the most popular route types are out and back and loop for all 1
 
 ### Are there trails or parks that are more kid friendly than others?
 
-When you are planning a hiking trip with kids, you will probably want to do everything in your power to make it as painful as possible. In order to do this, we recommend going on trails that are more family friendly. Some trails, such as the famous Angel’s Landing at Zion National Park, have steep cliffs and are incredibly dangerous for young children. To help families more easily choose appropriate hiking trails on their trips, we summarized the data based on what trails has a feature listed as “kids”. In the graph below, we can see the distribution of hiking distances for ten mile or less trails that are classified as kid friendly versus not kid friendly. At all ten parks the large majority of kid friendly hiking trails are less than three miles, which makes sense. It seems that out of all the parks that Acadia tends to have the highest proportion of less than three mile hikes (both kid and not kid friendly), with very few hikes in the 4-10 mile range.
+When you are planning a hiking trip with kids, you will probably want to do everything in your power to make it as painless as possible. In order to do this, we recommend going on trails that are more family friendly. Some trails, such as the famous Angel’s Landing at Zion National Park, have steep cliffs and are incredibly dangerous for young children. To help families more easily choose appropriate hiking trails on their trips, we summarized the data based on what trails has a feature listed as “kids”. In the graph below, we can see the distribution of hiking distances for ten mile or less trails that are classified as kid friendly versus not kid friendly. At all ten parks the large majority of kid friendly hiking trails are less than three miles, which makes sense. It seems that out of all the parks that Acadia tends to have the highest proportion of less than three mile hikes (both kid and not kid friendly), with very few hikes in the 4-10 mile range.
 
 ```{r, echo = FALSE}
 national_parks %>%
