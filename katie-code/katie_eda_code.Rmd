@@ -33,19 +33,14 @@ library(patchwork)     # for nicely combining ggplot2 graphs
 library(gt)            # for creating nice tables
 library(rvest)         # for scraping data
 library(robotstxt)     # for checking if you can scrape data
+library(ggtext)
+library(tidyverse)
 theme_set(theme_minimal())
 ```
 
 ```{r}
-library(readr)
-library(tidyverse)
-library(stringr)
-library(tidyr)
 nationalpark <- read_csv("../data/nationalpark.csv")
 ```
-
-
-
 
 
 ```{r}
@@ -61,22 +56,51 @@ national_parks <- nationalpark %>%
 ```{r}
 national_parks %>%
   group_by(area_name) %>%
-  summarize(total_park_pop = sum(popularity)) %>%
+  summarise(total_park_pop = sum(popularity)) %>%
   ggplot(aes(y = fct_reorder(area_name, total_park_pop), x = total_park_pop)) +
-  geom_col() +
+  geom_col(fill = "gold2") +
   theme(panel.grid.major.y = element_blank(),
-        plot.title = element_text(hjust = 3.5)) +
+        plot.title = element_markdown(family = "mono", face = "bold"),
+        plot.title.position = "plot") +
   labs(title = "Visitation at the Ten Most Popular National Parks",
        y = "",
-       x = "",
-       caption = "Visualization: Katie Funk | Data from:")
+       x = "")
 ```
+
 ```{r}
 top_park_location <- national_parks %>%
   group_by(area_name) %>%
-  mutate(top_name = max(name)) %>%
-  filter(name %in% c("Yavapai Point via Rim Trail", "Wonderland Wash","Ypsilon Lake Trail", "Wonsqueak Bike Path Loop", "Yellowstone River Trail","Wolf Ridge Trail to Gregory Bald", "Wetmore, Lake and Salt Run Trail Loop","Zion Traverse: Lee Pass to East Rim Trailhead"))
+  mutate(top_name = max(popularity))
+
+national_parks %>%
+  group_by(area_name) %>%
+  summarise(total_park_pop = sum(popularity)) %>%
+  ggplot(aes(y = fct_reorder(area_name, total_park_pop), x = total_park_pop)) +
+  geom_col(fill = "turquoise3") +
+  geom_col(data = top_park_location, aes(y = area_name, x = popularity),
+           fill = "salmon2") +
+  geom_text(data = top_park_location, aes(y = area_name, x = popularity,
+                                          label = name),hjust = 0) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_markdown(family = "mono", face = "bold"),
+        plot.title.position = "plot") +
+  labs(title = "Visitation at the Ten Most Popular National Parks",
+       y = "",
+       x = "")
 ```
+
+```{r}			
+national_parks %>%
+  right_join(top_park_location, by = c("area_name", "name", "popularity" = "top_name")) %>%
+  select(area_name, name, popularity, top_name) %>%
+  group_by(area_name) %>%
+  mutate(total_park_pop = sum(popularity)) %>%
+  ggplot(aes(y = fct_reorder(area_name, total_park_pop), x = total_park_pop)) +
+  geom_col(fill = "rosybrown2") +
+  geom_col(aes(y = top_name, text = top_name),
+           fill = "lightcoral") +
+  
+
 
 
 
